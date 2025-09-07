@@ -5,7 +5,7 @@ export const demoUsers = [
     name: "Анна Петрова",
     login: "anna",
     password: "password123",
-    imageUrl: "https://i.pravatar.cc/150?img=1",
+    imageUrl: "https://i.pravatar.cc/150?u=anna",
     token: "demo-token-1"
   },
   {
@@ -13,7 +13,7 @@ export const demoUsers = [
     name: "Иван Сидоров",
     login: "ivan",
     password: "password123",
-    imageUrl: "https://i.pravatar.cc/150?img=2",
+    imageUrl: "https://i.pravatar.cc/150?u=ivan",
     token: "demo-token-2"
   },
   {
@@ -21,7 +21,7 @@ export const demoUsers = [
     name: "Мария Иванова",
     login: "maria",
     password: "password123",
-    imageUrl: "https://i.pravatar.cc/150?img=3",
+    imageUrl: "https://i.pravatar.cc/150?u=maria",
     token: "demo-token-3"
   }
 ];

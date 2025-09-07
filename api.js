@@ -9,12 +9,12 @@ const demoPosts = [
   {
     id: "post1",
     description: "Красивый закат на море 🌅",
-    imageUrl: "https://picsum.photos/800/600?random=1",
+    imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop",
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     user: {
       id: "user1",
       name: "Анна Петрова",
-      imageUrl: "https://i.pravatar.cc/150?img=1"
+      imageUrl: "https://i.pravatar.cc/150?u=anna"
     },
     likes: [
       { userId: "user2" },
@@ -28,7 +28,7 @@ const demoPosts = [
         user: {
           id: "user2",
           name: "Иван Сидоров",
-          imageUrl: "https://i.pravatar.cc/150?img=2"
+          imageUrl: "https://i.pravatar.cc/150?u=ivan"
         }
       }
     ]
@@ -36,12 +36,12 @@ const demoPosts = [
   {
     id: "post2",
     description: "Горный поход был просто незабываем! 🏔️",
-    imageUrl: "https://picsum.photos/800/600?random=2",
+    imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=600&fit=crop",
     createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
     user: {
       id: "user2",
       name: "Иван Сидоров",
-      imageUrl: "https://i.pravatar.cc/150?img=2"
+      imageUrl: "https://i.pravatar.cc/150?u=ivan"
     },
     likes: [
       { userId: "user1" }
@@ -51,12 +51,12 @@ const demoPosts = [
   {
     id: "post3",
     description: "Кофе и хорошая книга - что может быть лучше? 📚☕",
-    imageUrl: "https://picsum.photos/800/600?random=3",
+    imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&h=600&fit=crop",
     createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
     user: {
       id: "user3",
       name: "Мария Иванова",
-      imageUrl: "https://i.pravatar.cc/150?img=3"
+      imageUrl: "https://i.pravatar.cc/150?u=maria"
     },
     likes: [
       { userId: "user1" },
@@ -70,7 +70,7 @@ const demoPosts = [
         user: {
           id: "user1",
           name: "Анна Петрова",
-          imageUrl: "https://i.pravatar.cc/150?img=1"
+          imageUrl: "https://i.pravatar.cc/150?u=anna"
         }
       },
       {
@@ -80,7 +80,7 @@ const demoPosts = [
         user: {
           id: "user2",
           name: "Иван Сидоров",
-          imageUrl: "https://i.pravatar.cc/150?img=2"
+          imageUrl: "https://i.pravatar.cc/150?u=ivan"
         }
       }
     ]

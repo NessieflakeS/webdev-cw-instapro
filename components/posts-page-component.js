@@ -157,6 +157,11 @@ const updateCommentsUI = (postId, comments) => {
   }
 };
 
+// SVG для иконок лайков
+const likeActiveSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="#FF5252"/></svg>`;
+
+const likeNotActiveSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" stroke="#8A8A8A" stroke-width="2" fill="none"/></svg>`;
+
 export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) => {
   // Сбросим состояние пагинации при первой загрузке
   if (currentPage === 1) {
@@ -180,15 +185,15 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
     return `
       <li class="post">
         <div class="post-header" data-user-id="${post.user.id}">
-          <img src="${post.user.imageUrl}" class="post-header__user-image" alt="Аватар ${post.user.name}">
+          <img src="${post.user.imageUrl}" class="post-header__user-image" alt="Аватар ${post.user.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFOEU4RTgiLz4KPHBhdGggZD0iTTI2IDI2QzI2IDI0LjM0MzEgMjQuNjU2OSAyMyAyMyAyM0gxN0MxNS4zNDMxIDIzIDE0IDI0LjM0MzEgMTQgMjZWMjcuNUMxNCAyOC4wNTIyIDE0LjQ0NzcgMjguNSAxNSAyOC41SDI1QzI1LjU1MjMgMjguNSAyNiAyOC4wNTIyIDI2IDI3LjVWMjZaIiBmaWxsPSIjOEE4QThBIi8+CjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjIiIGZpbGw9IiM4QThBOEEiLz4KPGNpcmNsZSBjeD0iMjQiIGN5PSIxNiIgcj0iMiIgZmlsbD0iIzhBOEE4QSIvPgo8L3N2Zz4K'">
           <p class="post-header__user-name">${post.user.name}</p>
         </div>
         <div class="post-image-container">
-          <img class="post-image" src="${post.imageUrl}" loading="lazy" alt="Пост пользователя ${post.user.name}">
+          <img class="post-image" src="${post.imageUrl}" loading="lazy" alt="Пост пользователя ${post.user.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDgwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjRThFOEU4Ii8+CjxwYXRoIGQ9Ik0zNTAgMzAwQzM1MCAyNjEuMDQ4IDM4MS4wNDggMjMwIDQyMCAyMzBDNDU4Ljk1MiAyMzAgNDkwIDI2MS4wNDggNDkwIDMwMEM0OTAgMzM4Ljk1MiA0NTguOTUyIDM3MCA0MjAgMzcwQzM4MS4wNDggMzcwIDM1MCAzMzguOTUyIDM1MCAzMDBaIiBmaWxsPSIjOEE4QThBIi8+CjxwYXRoIGQ9Ik0yNTAgNDUwQzI1MCA0MjcuOTA5IDI2Ny45MDkgNDEwIDI5MCA0MTBINTUwQzU3Mi4wOTEgNDEwIDU5MCA0MjcuOTA5IDU5MCA0NTBWNTUwQzU5MCA1NzIuMDkxIDU3Mi4wOTEgNTkwIDU1MCA1OTBIMjkwQzI2Ny45MDkgNTkwIDI1MCA1NzIuMDkxIDI1MCA1NTBWNDUwWiIgZmlsbD0iIzhBOEE4QSIvPgo8L3N2Zz4K'">
         </div>
         <div class="post-likes">
           <button data-post-id="${post.id}" class="like-button">
-            <img src="${isLiked ? './assets/images/like-active.svg' : './assets/images/like-not-active.svg'}" width="24" height="24" alt="Лайк">
+            ${isLiked ? likeActiveSvg : likeNotActiveSvg}
           </button>
           <p class="post-likes-text">
             Нравится: <strong>${post.likes ? post.likes.length : 0}</strong>
@@ -222,7 +227,7 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
 
   const pageTitle = isUserPage && posts.length > 0
     ? `<div class="posts-user-header">
-         <img src="${posts[0].user.imageUrl}" class="posts-user-header__user-image" alt="Аватар ${posts[0].user.name}">
+         <img src="${posts[0].user.imageUrl}" class="posts-user-header__user-image" alt="Аватар ${posts[0].user.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFOEU4RTgiLz4KPHBhdGggZD0iTTI2IDI2QzI2IDI0LjM0MzEgMjQuNjU2OSAyMyAyMyAyM0gxN0MxNS4zNDMxIDIzIDE0IDI0LjM0MzEgMTQgMjZWMjcuNUMxNCAyOC4wNTIyIDE0LjQ0NzcgMjguNSAxNSAyOC41SDI1QzI1LjU1MjMgMjguNSAyNiAyOC4wNTIyIDI2IDI3LjVWMjZaIiBmaWxsPSIjOEE4QThBIi8+CjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjIiIGZpbGw9IiM4QThBOEEiLz4KPGNpcmNsZSBjeD0iMjQiIGN5PSIxNiIgcj0iMiIgZmlsbD0iIzhBOEE4QSIvPgo8L3N2Zz4K'">
          <p class="posts-user-header__user-name">${posts[0].user.name}</p>
        </div>`
     : '';
