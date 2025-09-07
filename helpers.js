@@ -46,3 +46,76 @@ export function showNotification(message, type = "info") {
     }
   }, 5000);
 }
+
+// Функция для подтверждения действий
+export function confirmAction(message, confirmText = "Да", cancelText = "Отмена") {
+  return new Promise((resolve) => {
+    // Создаем overlay
+    const overlay = document.createElement("div");
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    // Создаем модальное окно
+    const modal = document.createElement("div");
+    modal.style.cssText = `
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    `;
+
+    modal.innerHTML = `
+      <p style="margin: 0 0 20px 0; font-size: 16px;">${message}</p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button class="button" id="confirm-cancel">${cancelText}</button>
+        <button class="button secondary-button" id="confirm-ok">${confirmText}</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Обработчики событий
+    const handleConfirm = () => {
+      document.body.removeChild(overlay);
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      document.body.removeChild(overlay);
+      resolve(false);
+    };
+
+    document.getElementById("confirm-ok").addEventListener("click", handleConfirm);
+    document.getElementById("confirm-cancel").addEventListener("click", handleCancel);
+
+    // Закрытие по клику на overlay
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        handleCancel();
+      }
+    });
+
+    // Закрытие по ESC
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        handleCancel();
+        document.removeEventListener("keydown", handleEscape);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+  });
+}

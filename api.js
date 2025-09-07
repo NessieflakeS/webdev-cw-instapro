@@ -138,3 +138,29 @@ export function uploadImage({ file }) {
     .then(handleApiError)
     .then((response) => response.json());
 }
+
+// Функция для добавления комментария
+export function addComment({ token, postId, text }) {
+  return fetch(`${postsHost}/${postId}/comments`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text }),
+  })
+    .then(handleApiError)
+    .then((response) => response.json());
+}
+
+// Функция для получения комментариев
+export function getComments({ token, postId }) {
+  return fetch(`${postsHost}/${postId}/comments`, {
+    method: "GET",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then(handleApiError)
+    .then((response) => response.json());
+}

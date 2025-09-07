@@ -68,11 +68,13 @@ const getToken = () => {
   return token;
 };
 
-export const logout = () => {
-  if (confirm("Вы уверены, что хотите выйти?")) {
+export const logout = async () => {
+  const confirmed = await confirmAction("Вы уверены, что хотите выйти?", "Выйти", "Отмена");
+  if (confirmed) {
     user = null;
     removeUserFromLocalStorage();
     goToPage(POSTS_PAGE);
+    showSuccess("Вы успешно вышли из системы");
   }
 };
 

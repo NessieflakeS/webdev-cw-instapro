@@ -606,3 +606,130 @@
     max-width: none;
   }
 }
+
+/* Стили для уведомлений */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  max-width: 350px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.notification-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  position: relative;
+}
+
+.notification-message {
+  flex: 1;
+  margin-right: 10px;
+  line-height: 1.4;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.notification-close:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.notification-success {
+  border-left: 4px solid #4caf50;
+}
+
+.notification-error {
+  border-left: 4px solid #f44336;
+}
+
+.notification-info {
+  border-left: 4px solid #2196f3;
+}
+
+/* Адаптивность для уведомлений */
+@media (max-width: 768px) {
+  .notification {
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+}
+
+/* Стили для индикатора загрузки постов */
+.posts-loader {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.no-more-posts {
+  text-align: center;
+  padding: 20px;
+  color: #8a8a8a;
+  font-style: italic;
+}
+
+/* Стили для комментариев */
+.post-comments {
+  margin-top: 15px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 15px;
+}
+
+.comment {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.comment strong {
+  color: #565eef;
+}
+
+.add-comment {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  resize: vertical;
+  min-height: 40px;
+  font-family: inherit;
+}
+
+.comment-button {
+  align-self: flex-end;
+  padding: 8px 16px;
+  height: 40px;
+}
