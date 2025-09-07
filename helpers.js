@@ -30,3 +30,19 @@ export function formatDate(dateString) {
   
   return date.toLocaleDateString();
 }
+
+// Функция для показа уведомлений
+export function showNotification(message, type = "info") {
+  const notification = document.createElement("div");
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  
+  document.body.appendChild(notification);
+  
+  // Удаляем уведомление через 5 секунд
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      document.body.removeChild(notification);
+    }
+  }, 5000);
+}

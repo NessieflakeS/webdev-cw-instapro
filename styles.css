@@ -522,3 +522,87 @@
     font-size: 22px;
   }
 }
+
+.logo {
+  margin: 0;
+  font-size: 28px;
+  cursor: pointer;
+  width: 130px;
+  color: #565eef;
+  transition: color 0.2s ease;
+}
+
+.logo:hover {
+  color: #6d73ff;
+  text-decoration: none;
+}
+
+/* Улучшенные стили для уведомлений */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 5px;
+  z-index: 1000;
+  max-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease;
+}
+
+.notification.success {
+  background-color: #4caf50;
+  color: white;
+}
+
+.notification.error {
+  background-color: #ff4757;
+  color: white;
+}
+
+.notification.info {
+  background-color: #2f80ed;
+  color: white;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Улучшенные стили для кнопок при наведении */
+.header-button {
+  transition: color 0.2s ease;
+}
+
+.header-button:hover {
+  color: #6d73ff;
+}
+
+/* Анимация для лайков */
+.like-button {
+  transition: transform 0.2s ease;
+}
+
+.like-button:hover {
+  transform: scale(1.1);
+}
+
+.like-button:active {
+  transform: scale(0.95);
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .notification {
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+}

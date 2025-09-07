@@ -49,15 +49,31 @@ const handleError = (error) => {
   }, 5000);
 };
 
+// Функция для настройки кликабельного логотипа
+const setupHeaderLogo = () => {
+  const logoElement = document.querySelector('.logo');
+  if (logoElement && !logoElement.hasAttribute('data-listener-added')) {
+    logoElement.setAttribute('data-listener-added', 'true');
+    logoElement.addEventListener('click', () => {
+      goToPage(POSTS_PAGE);
+    });
+    
+    // Добавляем стили для курсора
+    logoElement.style.cursor = 'pointer';
+  }
+};
+
 const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
   return token;
 };
 
 export const logout = () => {
-  user = null;
-  removeUserFromLocalStorage();
-  goToPage(POSTS_PAGE);
+  if (confirm("Вы уверены, что хотите выйти?")) {
+    user = null;
+    removeUserFromLocalStorage();
+    goToPage(POSTS_PAGE);
+  }
 };
 
 /**
@@ -174,5 +190,10 @@ const renderApp = () => {
     });
   }
 };
+
+// Настраиваем логотип после первоначальной загрузки
+setTimeout(() => {
+  setupHeaderLogo();
+}, 100);
 
 goToPage(POSTS_PAGE);
