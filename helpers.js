@@ -34,17 +34,57 @@ export function formatDate(dateString) {
 // Функция для показа уведомлений
 export function showNotification(message, type = "info") {
   const notification = document.createElement("div");
-  notification.className = `notification ${type}`;
-  notification.textContent = message;
-  
+  notification.className = `notification notification-${type}`;
+  notification.innerHTML = `
+    <div class="notification-content">
+      <span class="notification-message">${message}</span>
+      <button class="notification-close">&times;</button>
+    </div>
+  `;
+
   document.body.appendChild(notification);
-  
-  // Удаляем уведомление через 5 секунд
+
+  // Анимация появления
+  setTimeout(() => {
+    notification.classList.add('notification-visible');
+  }, 10);
+
+  // Обработчик закрытия
+  const closeButton = notification.querySelector('.notification-close');
+  closeButton.addEventListener('click', () => {
+    hideNotification(notification);
+  });
+
+  // Автоматическое закрытие через 5 секунд
+  setTimeout(() => {
+    hideNotification(notification);
+  }, 5000);
+
+  return notification;
+}
+
+function hideNotification(notification) {
+  notification.classList.remove('notification-visible');
   setTimeout(() => {
     if (document.body.contains(notification)) {
       document.body.removeChild(notification);
     }
-  }, 5000);
+  }, 300);
+}
+
+// Функция для показа ошибок
+export function showError(message) {
+  return showNotification(message, 'error');
+}
+
+// Функция для показа успешных уведомлений
+export function showSuccess(message) {
+  return showNotification(message, 'success');
+}
+
+// Функция для показа информационных уведомлений
+export function showInfo(message) {
+  return showNotification(message, 'info');
 }
 
 // Функция для подтверждения действий
