@@ -20,6 +20,35 @@ export let user = getUserFromLocalStorage();
 export let page = null;
 export let posts = [];
 
+// Глобальный обработчик ошибок
+const handleError = (error) => {
+  console.error("Произошла ошибка:", error);
+  
+  // Показываем уведомление пользователю
+  const notification = document.createElement("div");
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ff4757;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    z-index: 1000;
+    max-width: 300px;
+  `;
+  notification.textContent = error.message || "Произошла ошибка";
+  
+  document.body.appendChild(notification);
+  
+  // Удаляем уведомление через 5 секунд
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      document.body.removeChild(notification);
+    }
+  }, 5000);
+};
+
 const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
   return token;
@@ -61,7 +90,7 @@ export const goToPage = (newPage, data) => {
           renderApp();
         })
         .catch((error) => {
-          console.error(error);
+          handleError(error);
           goToPage(POSTS_PAGE);
         });
     }
@@ -77,7 +106,7 @@ export const goToPage = (newPage, data) => {
           renderApp();
         })
         .catch((error) => {
-          console.error(error);
+          handleError(error);
           goToPage(POSTS_PAGE);
         });
     }
@@ -124,8 +153,7 @@ const renderApp = () => {
             goToPage(POSTS_PAGE);
           })
           .catch((error) => {
-            console.error(error);
-            alert("Ошибка при добавлении поста");
+            handleError(error);
           });
       },
     });

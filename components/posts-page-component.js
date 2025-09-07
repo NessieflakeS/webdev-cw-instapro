@@ -1,10 +1,12 @@
 import { likePost, dislikePost } from "../api.js";
 import { user, goToPage } from "../index.js";
-import { USER_POSTS_PAGE } from "../routes.js";
+import { USER_POSTS_PAGE, ADD_POSTS_PAGE, AUTH_PAGE } from "../routes.js";
+import { logout } from "../index.js";
+import { formatDate } from "../helpers.js";
 
 export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) => {
   const postsHtml = posts.map((post) => {
-    const isLiked = post.likes.some((like) => like.userId === user?._id);
+    const isLiked = post.likes && post.likes.some((like) => like.userId === user?._id);
     
     return `
       <li class="post">
@@ -20,7 +22,7 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
             <img src="${isLiked ? './assets/images/like-active.svg' : './assets/images/like-not-active.svg'}" width="24" height="24">
           </button>
           <p class="post-likes-text">
-            Нравится: <strong>${post.likes.length}</strong>
+            Нравится: <strong>${post.likes ? post.likes.length : 0}</strong>
           </p>
         </div>
         <p class="post-text">
@@ -28,16 +30,16 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
           ${post.description}
         </p>
         <p class="post-date">
-          ${new Date(post.createdAt).toLocaleString()}
+          ${formatDate(post.createdAt)}
         </p>
       </li>
     `;
   }).join('');
 
-  const pageTitle = isUserPage 
+  const pageTitle = isUserPage && posts.length > 0
     ? `<div class="posts-user-header">
-         <img src="${posts[0]?.user.imageUrl || ''}" class="posts-user-header__user-image">
-         <p class="posts-user-header__user-name">${posts[0]?.user.name || 'Пользователь'}</p>
+         <img src="${posts[0].user.imageUrl}" class="posts-user-header__user-image">
+         <p class="posts-user-header__user-name">${posts[0].user.name}</p>
        </div>`
     : '';
 
@@ -56,7 +58,7 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
       </div>
       ${pageTitle}
       <ul class="posts">
-        ${postsHtml}
+        ${posts.length > 0 ? postsHtml : '<p class="no-posts">Пока нет постов</p>'}
       </ul>
     </div>
   `;
@@ -64,26 +66,35 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
   appEl.innerHTML = appHtml;
 
   // Обработчик для перехода на главную страницу
-  document.getElementById("go-to-main-page").addEventListener("click", () => {
-    goToPage(POSTS_PAGE);
-  });
+  const goToMainPageEl = document.getElementById("go-to-main-page");
+  if (goToMainPageEl) {
+    goToMainPageEl.addEventListener("click", () => {
+      goToPage(POSTS_PAGE);
+    });
+  }
 
   // Обработчики для кнопок в шапке
   if (user) {
-    document.querySelector(".add-post-button").addEventListener("click", () => {
-      goToPage(ADD_POSTS_PAGE);
-    });
-
-    document.querySelector(".logout-button").addEventListener("click", () => {
-      // Функция logout импортируется из index.js
-      import("../index.js").then(module => {
-        module.logout();
+    const addPostButton = document.querySelector(".add-post-button");
+    if (addPostButton) {
+      addPostButton.addEventListener("click", () => {
+        goToPage(ADD_POSTS_PAGE);
       });
-    });
+    }
+
+    const logoutButton = document.querySelector(".logout-button");
+    if (logoutButton) {
+      logoutButton.addEventListener("click", () => {
+        logout();
+      });
+    }
   } else {
-    document.querySelector(".login-button").addEventListener("click", () => {
-      goToPage(AUTH_PAGE);
-    });
+    const loginButton = document.querySelector(".login-button");
+    if (loginButton) {
+      loginButton.addEventListener("click", () => {
+        goToPage(AUTH_PAGE);
+      });
+    }
   }
 
   // Обработчики для переходов на страницу пользователя
@@ -108,6 +119,9 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
       const post = posts.find(p => p.id === postId);
       const isLiked = post.likes.some((like) => like.userId === user._id);
       
+      // Показываем состояние загрузки
+      button.disabled = true;
+      
       if (isLiked) {
         dislikePost({ token: `Bearer ${user.token}`, postId })
           .then(() => {
@@ -118,6 +132,7 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
           .catch((error) => {
             console.error(error);
             alert("Ошибка при снятии лайка");
+            button.disabled = false;
           });
       } else {
         likePost({ token: `Bearer ${user.token}`, postId })
@@ -129,6 +144,7 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
           .catch((error) => {
             console.error(error);
             alert("Ошибка при установке лайка");
+            button.disabled = false;
           });
       }
     });

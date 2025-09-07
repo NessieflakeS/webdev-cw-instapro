@@ -3,6 +3,23 @@ import { renderUploadImageComponent } from "./upload-image-component.js";
 import { goToPage } from "../index.js";
 import { POSTS_PAGE } from "../routes.js";
 
+// Функция валидации формы
+const validateForm = (isLogin, name, login, password) => {
+  if (!isLogin && !name.trim()) {
+    return "Введите имя";
+  }
+  
+  if (!login.trim()) {
+    return "Введите логин";
+  }
+  
+  if (password.length < 3) {
+    return "Пароль должен содержать минимум 3 символа";
+  }
+  
+  return null;
+};
+
 export function renderAuthPageComponent({ appEl, setUser, user, goToPage }) {
   let isLogin = true;
   let imageUrl = "";
@@ -66,43 +83,41 @@ export function renderAuthPageComponent({ appEl, setUser, user, goToPage }) {
     document.getElementById("login-button").addEventListener("click", () => {
       errorEl.textContent = "";
 
+      const name = !isLogin ? document.getElementById("name-input").value : "";
+      const login = document.getElementById("login-input").value;
+      const password = document.getElementById("password-input").value;
+      
+      // Валидация
+      const validationError = validateForm(isLogin, name, login, password);
+      if (validationError) {
+        errorEl.textContent = validationError;
+        return;
+      }
+      
+      // Показываем индикатор загрузки
+      const loginButton = document.getElementById("login-button");
+      loginButton.disabled = true;
+      loginButton.textContent = "Загрузка...";
+
       if (isLogin) {
-        const login = document.getElementById("login-input").value;
-        const password = document.getElementById("password-input").value;
-
-        if (!login || !password) {
-          errorEl.textContent = "Заполните все поля";
-          return;
-        }
-
         loginUser({ login, password })
-          .then((user) => {
-            setUser(user.user);
+          .then((userData) => {
+            setUser(userData.user);
           })
           .catch((error) => {
             errorEl.textContent = error.message;
+            loginButton.disabled = false;
+            loginButton.textContent = isLogin ? "Войти" : "Зарегистрироваться";
           });
       } else {
-        const name = document.getElementById("name-input").value;
-        const login = document.getElementById("login-input").value;
-        const password = document.getElementById("password-input").value;
-
-        if (!name || !login || !password) {
-          errorEl.textContent = "Заполните все поля";
-          return;
-        }
-
-        if (!imageUrl) {
-          errorEl.textContent = "Не выбрана фотография";
-          return;
-        }
-
         registerUser({ login, password, name, imageUrl })
-          .then((user) => {
-            setUser(user.user);
+          .then((userData) => {
+            setUser(userData.user);
           })
           .catch((error) => {
             errorEl.textContent = error.message;
+            loginButton.disabled = false;
+            loginButton.textContent = isLogin ? "Войти" : "Зарегистрироваться";
           });
       }
     });

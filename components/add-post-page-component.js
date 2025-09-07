@@ -2,6 +2,7 @@ import { renderUploadImageComponent } from "./upload-image-component.js";
 import { uploadImage } from "../api.js";
 import { goToPage } from "../index.js";
 import { POSTS_PAGE } from "../routes.js";
+import { logout } from "../index.js";
 
 export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
   let imageUrl = "";
@@ -57,8 +58,9 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
       }
 
       // Показываем состояние загрузки
-      document.getElementById("add-button").disabled = true;
-      document.getElementById("add-button").textContent = "Добавляем...";
+      const addButton = document.getElementById("add-button");
+      addButton.disabled = true;
+      addButton.textContent = "Добавляем...";
 
       onAddPostClick({ description, imageUrl });
     });
@@ -70,9 +72,7 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
 
     // Обработчик для выхода
     document.querySelector(".logout-button").addEventListener("click", () => {
-      import("../index.js").then(module => {
-        module.logout();
-      });
+      logout();
     });
   };
 
