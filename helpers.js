@@ -159,3 +159,9 @@ export function confirmAction(message, confirmText = "Да", cancelText = "От�
     document.addEventListener("keydown", handleEscape);
   });
 }
+
+// Функция для проверки, является ли пользователь демо-пользователем
+export function isDemoUser() {
+  const user = getUserFromLocalStorage();
+  return user && user.token && user.token.startsWith('demo-token-');
+}
