@@ -2,6 +2,7 @@ import { loginUser, registerUser, uploadImage } from "../api.js";
 import { renderUploadImageComponent } from "./upload-image-component.js";
 import { goToPage } from "../index.js";
 import { POSTS_PAGE } from "../routes.js";
+import { demoUsers, loginDemoUser } from "../demo-users.js";
 
 // Функция валидации формы
 const validateForm = (isLogin, name, login, password) => {
@@ -56,6 +57,21 @@ export function renderAuthPageComponent({ appEl, setUser, user, goToPage }) {
           </div>
           <span class="form-error" id="form-error"></span>
         </div>
+        
+        <!-- Блок для демо-пользователей -->
+        ${isLogin ? `
+          <div class="demo-users">
+            <h4 class="demo-users-title">Быстрый вход для тестирования:</h4>
+            <div class="demo-users-list">
+              ${demoUsers.map(user => `
+                <button class="demo-user-button" data-user-id="${user.id}">
+                  <img src="${user.imageUrl}" alt="${user.name}" class="demo-user-avatar">
+                  <span>${user.name}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -126,6 +142,17 @@ export function renderAuthPageComponent({ appEl, setUser, user, goToPage }) {
     document.getElementById("toggle-button").addEventListener("click", () => {
       isLogin = !isLogin;
       renderForm();
+    });
+
+    // Обработчики для демо-пользователей
+    document.querySelectorAll(".demo-user-button").forEach(button => {
+      button.addEventListener("click", () => {
+        const userId = button.dataset.userId;
+        const user = loginDemoUser(userId);
+        if (user) {
+          setUser(user);
+        }
+      });
     });
   };
 
