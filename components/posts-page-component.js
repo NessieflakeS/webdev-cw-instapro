@@ -17,20 +17,16 @@ const loadMorePosts = async () => {
   
   try {
     // Показываем индикатор загрузки
+    const postsContainer = document.querySelector('.posts');
+    if (!postsContainer) return;
+    
     const loader = document.createElement('div');
     loader.className = 'posts-loader';
     loader.innerHTML = '<div class="loader"><div></div><div></div><div></div></div>';
-    document.querySelector('.posts').appendChild(loader);
-    
-    // В реальном приложении здесь был бы запрос к API с пагинацией
-    // Для демонстрации просто имитируем задержку
+    postsContainer.appendChild(loader);
+
+    // Имитируем загрузку новых постов
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // В реальном приложении:
-    // const newPosts = await getPosts({ token: getToken(), page: nextPage });
-    // if (newPosts.length === 0) {
-    //   hasMorePosts = false;
-    // }
     
     // Для демонстрации просто отключаем дальнейшую загрузку
     hasMorePosts = false;
@@ -39,12 +35,13 @@ const loadMorePosts = async () => {
     const noMorePosts = document.createElement('div');
     noMorePosts.className = 'no-more-posts';
     noMorePosts.textContent = 'Вы посмотрели все посты';
-    document.querySelector('.posts').appendChild(noMorePosts);
     
-    // Убираем индикатор загрузки
-    if (document.body.contains(loader)) {
-      document.body.removeChild(loader);
+    // Удаляем лоадер и добавляем сообщение
+    if (postsContainer.contains(loader)) {
+      postsContainer.removeChild(loader);
     }
+    postsContainer.appendChild(noMorePosts);
+    
   } catch (error) {
     console.error("Ошибка при загрузке постов:", error);
     showError("Не удалось загрузить дополнительные посты");

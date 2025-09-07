@@ -1,6 +1,7 @@
 import { getPosts, getUserPosts, addPost } from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
+import { confirmAction } from "./helpers.js";
 import {
   ADD_POSTS_PAGE,
   AUTH_PAGE,
@@ -69,12 +70,16 @@ const getToken = () => {
 };
 
 export const logout = async () => {
-  const confirmed = await confirmAction("Вы уверены, что хотите выйти?", "Выйти", "Отмена");
-  if (confirmed) {
-    user = null;
-    removeUserFromLocalStorage();
-    goToPage(POSTS_PAGE);
-    showSuccess("Вы успешно вышли из системы");
+  try {
+    const confirmed = await confirmAction("Вы уверены, что хотите выйти?", "Выйти", "Отмена");
+    if (confirmed) {
+      user = null;
+      removeUserFromLocalStorage();
+      goToPage(POSTS_PAGE);
+      showSuccess("Вы успешно вышли из системы");
+    }
+  } catch (error) {
+    console.error("Ошибка при выходе:", error);
   }
 };
 

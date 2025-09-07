@@ -1,5 +1,3 @@
-import { logout } from "../index.js";
-
 export function renderLoadingPageComponent({ appEl, user, goToPage }) {
   const appHtml = `
     <div class="page-container">
@@ -15,7 +13,7 @@ export function renderLoadingPageComponent({ appEl, user, goToPage }) {
           <div></div>
           <div></div>
         </div>
-        <p>Загрузка...</p>
+        <p class="loading-text">Загрузка...</p>
       </div>
     </div>
   `;
@@ -24,7 +22,10 @@ export function renderLoadingPageComponent({ appEl, user, goToPage }) {
 
   if (user) {
     document.querySelector(".logout-button").addEventListener("click", () => {
-      logout();
+      // Импортируем logout динамически чтобы избежать циклических зависимостей
+      import("../index.js").then(module => {
+        module.logout();
+      });
     });
   }
 }
