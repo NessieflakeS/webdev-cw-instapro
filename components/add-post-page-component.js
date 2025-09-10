@@ -1,13 +1,6 @@
-import { renderUploadImageComponent } from "./upload-image-component.js";
 import { uploadImage } from "../api.js";
-import { goToPage } from "../index.js";
 import { POSTS_PAGE } from "../routes.js";
-import { logout } from "../index.js";
 
-export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
-  let imageUrl = "";
-
-  const render = () => {
     const appHtml = `
     <div class="page-container">
       <div class="header-container">
@@ -74,7 +67,4 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
     document.querySelector(".logout-button").addEventListener("click", () => {
       logout();
     });
-  };
 
-  render();
-}

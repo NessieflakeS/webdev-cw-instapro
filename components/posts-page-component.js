@@ -1,4 +1,4 @@
-import { likePost, dislikePost, addComment, getComments } from "../api.js";
+import { likePost, dislikePost, getComments } from "../api.js";
 import { user, goToPage, logout } from "../index.js";
 import { USER_POSTS_PAGE, ADD_POSTS_PAGE, AUTH_PAGE, POSTS_PAGE } from "../routes.js";
 import { formatDate, showSuccess, showError } from "../helpers.js";
@@ -144,25 +144,11 @@ const handleCommentSubmit = async (postId, textarea, button) => {
   }
 };
 
-// Функция для обновления интерфейса комментариев
-const updateCommentsUI = (postId, comments) => {
-  const commentsContainer = document.getElementById(`comments-${postId}`);
-  if (commentsContainer) {
-    commentsContainer.innerHTML = comments.map(comment => `
-      <div class="comment">
-        <strong>${comment.user.name}:</strong> ${comment.text}
-        <span class="comment-date">${formatDate(comment.createdAt)}</span>
-      </div>
-    `).join('');
-  }
-};
-
 // SVG для иконок лайков
 const likeActiveSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="#FF5252"/></svg>`;
 
 const likeNotActiveSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" stroke="#8A8A8A" stroke-width="2" fill="none"/></svg>`;
 
-export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) => {
   // Сбросим состояние пагинации при первой загрузке
   if (currentPage === 1) {
     isLoadingMore = false;
@@ -170,7 +156,7 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
   }
   
   const postsHtml = posts.map((post) => {
-    const isLiked = post.likes && post.likes.some((like) => like.userId === user?._id);
+    const isLiked = user && post.likes && post.likes.some((like) => like.userId === user._id);
     
     // Формируем HTML для комментариев
     const commentsHtml = post.comments && post.comments.length > 0 
@@ -297,12 +283,12 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
 
   // Обработчики для лайков
   document.querySelectorAll(".like-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (!user) {
-        showError("Для лайков необходимо авторизоваться");
-        goToPage(AUTH_PAGE);
-        return;
-      }
+  button.addEventListener("click", () => {
+    if (!user) {
+      showError("Для лайков необходимо авторизоваться");
+      goToPage(AUTH_PAGE);
+      return;
+    }
 
       const postId = button.dataset.postId;
       const post = posts.find(p => p.id === postId);
@@ -377,4 +363,3 @@ export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) =
       scrollToTopButton = null;
     }
   };
-};

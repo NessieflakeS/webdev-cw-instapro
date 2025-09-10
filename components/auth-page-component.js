@@ -1,7 +1,5 @@
 import { loginUser, registerUser, uploadImage } from "../api.js";
 import { renderUploadImageComponent } from "./upload-image-component.js";
-import { goToPage } from "../index.js";
-import { POSTS_PAGE } from "../routes.js";
 import { demoUsers, loginDemoUser } from "../demo-users.js";
 
 // Функция валидации формы
@@ -21,11 +19,6 @@ const validateForm = (isLogin, name, login, password) => {
   return null;
 };
 
-export function renderAuthPageComponent({ appEl, setUser, user, goToPage }) {
-  let isLogin = true;
-  let imageUrl = "";
-
-  const renderForm = () => {
     const appHtml = `
     <div class="page-container">
       <div class="header-container">
@@ -154,7 +147,5 @@ export function renderAuthPageComponent({ appEl, setUser, user, goToPage }) {
         }
       });
     });
-  };
 
-  renderForm();
-}
+  

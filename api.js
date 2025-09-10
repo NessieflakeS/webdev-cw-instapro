@@ -1,6 +1,6 @@
 // Замени на свой, чтобы получить независимый от других набор данных.
 // "боевая" версия инстапро лежит в ключе prod
-const personalKey = "nikandrov_danil";
+const personalKey = "prod";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
 
@@ -87,6 +87,32 @@ const demoPosts = [
   }
 ];
 
+// Ключ для хранения лайков в localStorage
+const DEMO_LIKES_KEY = 'demo-likes';
+
+// Функции для работы с лайками в localStorage
+const getDemoLikes = () => {
+  const likes = localStorage.getItem(DEMO_LIKES_KEY);
+  return likes ? JSON.parse(likes) : {};
+};
+
+const saveDemoLikes = (likes) => {
+  localStorage.setItem(DEMO_LIKES_KEY, JSON.stringify(likes));
+};
+
+// Функция для обогащения постов информацией о лайках из localStorage
+const enhancePostsWithDemoLikes = (posts) => {
+  const demoLikes = getDemoLikes();
+  return posts.map(post => {
+    const postLikes = demoLikes[post.id] || [];
+    return {
+      ...post,
+      likes: postLikes.map(userId => ({ userId })),
+      isLiked: postLikes.includes(user.id)
+    };
+  });
+};
+
 // Функция для обработки ошибок API
 const handleApiError = (response) => {
   if (response.status === 401) {
@@ -112,7 +138,12 @@ const isDemoUser = (token) => {
 export function getPosts({ token }) {
   // Если это демо-пользователь, возвращаем тестовые данные
   if (isDemoUser(token)) {
-    return Promise.resolve(demoPosts);
+    // Получаем текущего пользователя из localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    // Обогащаем посты информацией о лайках
+    const enhancedPosts = enhancePostsWithDemoLikes(demoPosts);
+    return Promise.resolve(enhancedPosts);
   }
   
   return fetch(postsHost, {
@@ -132,8 +163,13 @@ export function getPosts({ token }) {
 export function getUserPosts({ token, userId }) {
   // Если это демо-пользователь, возвращаем тестовые данные
   if (isDemoUser(token)) {
+    // Получаем текущего пользователя из localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    // Фильтруем посты пользователя и обогащаем информацией о лайках
     const userPosts = demoPosts.filter(post => post.user.id === userId);
-    return Promise.resolve(userPosts);
+    const enhancedPosts = enhancePostsWithDemoLikes(userPosts);
+    return Promise.resolve(enhancedPosts);
   }
   
   return fetch(`${postsHost}/user-posts/${userId}`, {
@@ -193,10 +229,18 @@ export function likePost({ token, postId }) {
   // Если это демо-пользователь, имитируем успешный лайк
   if (isDemoUser(token)) {
     const user = JSON.parse(localStorage.getItem('user'));
-    const post = demoPosts.find(p => p.id === postId);
-    
-    if (post && !post.likes.some(like => like.userId === user.id)) {
-      post.likes.push({ userId: user.id });
+    if (!user) {
+      return Promise.reject(new Error("Пользователь не авторизован"));
+    }
+
+    // Сохраняем лайк в localStorage
+    const likes = getDemoLikes();
+    if (!likes[postId]) {
+      likes[postId] = [];
+    }
+    if (!likes[postId].includes(user.id)) {
+      likes[postId].push(user.id);
+      saveDemoLikes(likes);
     }
     
     return Promise.resolve({});
@@ -217,10 +261,15 @@ export function dislikePost({ token, postId }) {
   // Если это демо-пользователь, имитируем успешный дизлайк
   if (isDemoUser(token)) {
     const user = JSON.parse(localStorage.getItem('user'));
-    const post = demoPosts.find(p => p.id === postId);
-    
-    if (post) {
-      post.likes = post.likes.filter(like => like.userId !== user.id);
+    if (!user) {
+      return Promise.reject(new Error("Пользователь не авторизован"));
+    }
+
+    // Удаляем лайк из localStorage
+    const likes = getDemoLikes();
+    if (likes[postId]) {
+      likes[postId] = likes[postId].filter(id => id !== user.id);
+      saveDemoLikes(likes);
     }
     
     return Promise.resolve({});
