@@ -1,6 +1,7 @@
-import { getPosts } from "./api.js";
+import { getPosts, getUserPosts, addPost } from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
+import { confirmAction } from "./helpers.js";
 import {
   ADD_POSTS_PAGE,
   AUTH_PAGE,
@@ -20,15 +21,66 @@ export let user = getUserFromLocalStorage();
 export let page = null;
 export let posts = [];
 
+// Глобальный обработчик ошибок
+const handleError = (error) => {
+  console.error("Произошла ошибка:", error);
+  
+  // Показываем уведомление пользователю
+  const notification = document.createElement("div");
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ff4757;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    z-index: 1000;
+    max-width: 300px;
+  `;
+  notification.textContent = error.message || "Произошла ошибка";
+  
+  document.body.appendChild(notification);
+  
+  // Удаляем уведомление через 5 секунд
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      document.body.removeChild(notification);
+    }
+  }, 5000);
+};
+
+// Функция для настройки кликабельного логотипа
+const setupHeaderLogo = () => {
+  const logoElement = document.querySelector('.logo');
+  if (logoElement && !logoElement.hasAttribute('data-listener-added')) {
+    logoElement.setAttribute('data-listener-added', 'true');
+    logoElement.addEventListener('click', () => {
+      goToPage(POSTS_PAGE);
+    });
+    
+    // Добавляем стили для курсора
+    logoElement.style.cursor = 'pointer';
+  }
+};
+
 const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
   return token;
 };
 
-export const logout = () => {
-  user = null;
-  removeUserFromLocalStorage();
-  goToPage(POSTS_PAGE);
+export const logout = async () => {
+  try {
+    const confirmed = await confirmAction("Вы уверены, что хотите выйти?", "Выйти", "Отмена");
+    if (confirmed) {
+      user = null;
+      removeUserFromLocalStorage();
+      goToPage(POSTS_PAGE);
+      showSuccess("Вы успешно вышли из системы");
+    }
+  } catch (error) {
+    console.error("Ошибка при выходе:", error);
+  }
 };
 
 /**
@@ -61,17 +113,25 @@ export const goToPage = (newPage, data) => {
           renderApp();
         })
         .catch((error) => {
-          console.error(error);
+          handleError(error);
           goToPage(POSTS_PAGE);
         });
     }
 
     if (newPage === USER_POSTS_PAGE) {
-      // @@TODO: реализовать получение постов юзера из API
-      console.log("Открываю страницу пользователя: ", data.userId);
-      page = USER_POSTS_PAGE;
-      posts = [];
-      return renderApp();
+      page = LOADING_PAGE;
+      renderApp();
+
+      return getUserPosts({ token: getToken(), userId: data.userId })
+        .then((newPosts) => {
+          page = USER_POSTS_PAGE;
+          posts = newPosts;
+          renderApp();
+        })
+        .catch((error) => {
+          handleError(error);
+          goToPage(POSTS_PAGE);
+        });
     }
 
     page = newPage;
@@ -110,9 +170,14 @@ const renderApp = () => {
     return renderAddPostPageComponent({
       appEl,
       onAddPostClick({ description, imageUrl }) {
-        // @TODO: реализовать добавление поста в API
-        console.log("Добавляю пост...", { description, imageUrl });
-        goToPage(POSTS_PAGE);
+        // Реализация добавления поста в API
+        addPost({ token: getToken(), description, imageUrl })
+          .then(() => {
+            goToPage(POSTS_PAGE);
+          })
+          .catch((error) => {
+            handleError(error);
+          });
       },
     });
   }
@@ -120,14 +185,22 @@ const renderApp = () => {
   if (page === POSTS_PAGE) {
     return renderPostsPageComponent({
       appEl,
+      posts,
     });
   }
 
   if (page === USER_POSTS_PAGE) {
-    // @TODO: реализовать страницу с фотографиями отдельного пользвателя
-    appEl.innerHTML = "Здесь будет страница фотографий пользователя";
-    return;
+    return renderPostsPageComponent({
+      appEl,
+      posts,
+      isUserPage: true,
+    });
   }
 };
+
+// Настраиваем логотип после первоначальной загрузки
+setTimeout(() => {
+  setupHeaderLogo();
+}, 100);
 
 goToPage(POSTS_PAGE);

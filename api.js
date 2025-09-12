@@ -4,23 +4,346 @@ const personalKey = "prod";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
 
+// Моки данных для демо-режима
+const demoPosts = [
+  {
+    id: "post1",
+    description: "Красивый закат на море 🌅",
+    imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop",
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    user: {
+      id: "user1",
+      name: "Анна Петрова",
+      imageUrl: "https://i.pravatar.cc/150?u=anna"
+    },
+    likes: [
+      { userId: "user2" },
+      { userId: "user3" }
+    ],
+    comments: [
+      {
+        id: "comment1",
+        text: "Отличное фото!",
+        createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+        user: {
+          id: "user2",
+          name: "Иван Сидоров",
+          imageUrl: "https://i.pravatar.cc/150?u=ivan"
+        }
+      }
+    ]
+  },
+  {
+    id: "post2",
+    description: "Горный поход был просто незабываем! 🏔️",
+    imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=600&fit=crop",
+    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    user: {
+      id: "user2",
+      name: "Иван Сидоров",
+      imageUrl: "https://i.pravatar.cc/150?u=ivan"
+    },
+    likes: [
+      { userId: "user1" }
+    ],
+    comments: []
+  },
+  {
+    id: "post3",
+    description: "Кофе и хорошая книга - что может быть лучше? 📚☕",
+    imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&h=600&fit=crop",
+    createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+    user: {
+      id: "user3",
+      name: "Мария Иванова",
+      imageUrl: "https://i.pravatar.cc/150?u=maria"
+    },
+    likes: [
+      { userId: "user1" },
+      { userId: "user2" }
+    ],
+    comments: [
+      {
+        id: "comment2",
+        text: "Какая книга?",
+        createdAt: new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString(),
+        user: {
+          id: "user1",
+          name: "Анна Петрова",
+          imageUrl: "https://i.pravatar.cc/150?u=anna"
+        }
+      },
+      {
+        id: "comment3",
+        text: "Читаю сейчас ту же!",
+        createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+        user: {
+          id: "user2",
+          name: "Иван Сидоров",
+          imageUrl: "https://i.pravatar.cc/150?u=ivan"
+        }
+      }
+    ]
+  }
+];
+
+// Ключ для хранения лайков в localStorage
+const DEMO_LIKES_KEY = 'demo-likes';
+
+// Функции для работы с лайками в localStorage
+const getDemoLikes = () => {
+  const likes = localStorage.getItem(DEMO_LIKES_KEY);
+  return likes ? JSON.parse(likes) : {};
+};
+
+const saveDemoLikes = (likes) => {
+  localStorage.setItem(DEMO_LIKES_KEY, JSON.stringify(likes));
+};
+
+// Функция для обогащения постов информацией о лайках из localStorage
+const enhancePostsWithDemoLikes = (posts) => {
+  const demoLikes = getDemoLikes();
+  return posts.map(post => {
+    const postLikes = demoLikes[post.id] || [];
+    return {
+      ...post,
+      likes: postLikes.map(userId => ({ userId })),
+      isLiked: postLikes.includes(user.id)
+    };
+  });
+};
+
+// Функция для обработки ошибок API
+const handleApiError = (response) => {
+  if (response.status === 401) {
+    throw new Error("Нет авторизации");
+  }
+  
+  if (response.status === 404) {
+    throw new Error("Ресурс не найден");
+  }
+  
+  if (response.status >= 500) {
+    throw new Error("Ошибка сервера");
+  }
+  
+  return response;
+};
+
+// Функция для проверки, является ли пользователь демо-пользователем
+const isDemoUser = (token) => {
+  return token && token.startsWith('Bearer demo-token-');
+};
+
 export function getPosts({ token }) {
+  // Если это демо-пользователь, возвращаем тестовые данные
+  if (isDemoUser(token)) {
+    // Получаем текущего пользователя из localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    // Обогащаем посты информацией о лайках
+    const enhancedPosts = enhancePostsWithDemoLikes(demoPosts);
+    return Promise.resolve(enhancedPosts);
+  }
+  
   return fetch(postsHost, {
     method: "GET",
     headers: {
       Authorization: token,
     },
   })
-    .then((response) => {
-      if (response.status === 401) {
-        throw new Error("Нет авторизации");
-      }
-
-      return response.json();
-    })
+    .then(handleApiError)
+    .then((response) => response.json())
     .then((data) => {
       return data.posts;
     });
+}
+
+// Функция для получения постов пользователя
+export function getUserPosts({ token, userId }) {
+  // Если это демо-пользователь, возвращаем тестовые данные
+  if (isDemoUser(token)) {
+    // Получаем текущего пользователя из localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    // Фильтруем посты пользователя и обогащаем информацией о лайках
+    const userPosts = demoPosts.filter(post => post.user.id === userId);
+    const enhancedPosts = enhancePostsWithDemoLikes(userPosts);
+    return Promise.resolve(enhancedPosts);
+  }
+  
+  return fetch(`${postsHost}/user-posts/${userId}`, {
+    method: "GET",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then(handleApiError)
+    .then((response) => response.json())
+    .then((data) => {
+      return data.posts;
+    });
+}
+
+// Функция для добавления поста
+export function addPost({ token, description, imageUrl }) {
+  // Если это демо-пользователь, имитируем успешное добавление
+  if (isDemoUser(token)) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const newPost = {
+      id: `post-${Date.now()}`,
+      description,
+      imageUrl,
+      createdAt: new Date().toISOString(),
+      user: {
+        id: user.id,
+        name: user.name,
+        imageUrl: user.imageUrl
+      },
+      likes: [],
+      comments: []
+    };
+    
+    // Добавляем пост в начало списка
+    demoPosts.unshift(newPost);
+    
+    return Promise.resolve(newPost);
+  }
+  
+  return fetch(postsHost, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+    body: JSON.stringify({
+      description,
+      imageUrl,
+    }),
+  })
+    .then(handleApiError)
+    .then((response) => response.json());
+}
+
+// Функция для лайка поста
+export function likePost({ token, postId }) {
+  // Если это демо-пользователь, имитируем успешный лайк
+  if (isDemoUser(token)) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      return Promise.reject(new Error("Пользователь не авторизован"));
+    }
+
+    // Сохраняем лайк в localStorage
+    const likes = getDemoLikes();
+    if (!likes[postId]) {
+      likes[postId] = [];
+    }
+    if (!likes[postId].includes(user.id)) {
+      likes[postId].push(user.id);
+      saveDemoLikes(likes);
+    }
+    
+    return Promise.resolve({});
+  }
+  
+  return fetch(`${postsHost}/${postId}/like`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then(handleApiError)
+    .then((response) => response.json());
+}
+
+// Функция для дизлайка поста
+export function dislikePost({ token, postId }) {
+  // Если это демо-пользователь, имитируем успешный дизлайк
+  if (isDemoUser(token)) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      return Promise.reject(new Error("Пользователь не авторизован"));
+    }
+
+    // Удаляем лайк из localStorage
+    const likes = getDemoLikes();
+    if (likes[postId]) {
+      likes[postId] = likes[postId].filter(id => id !== user.id);
+      saveDemoLikes(likes);
+    }
+    
+    return Promise.resolve({});
+  }
+  
+  return fetch(`${postsHost}/${postId}/dislike`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then(handleApiError)
+    .then((response) => response.json());
+}
+
+// Функция для добавления комментария
+export function addComment({ token, postId, text }) {
+  // Если это демо-пользователь, имитируем успешное добавление комментария
+  if (isDemoUser(token)) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const post = demoPosts.find(p => p.id === postId);
+    
+    if (post) {
+      const newComment = {
+        id: `comment-${Date.now()}`,
+        text,
+        createdAt: new Date().toISOString(),
+        user: {
+          id: user.id,
+          name: user.name,
+          imageUrl: user.imageUrl
+        }
+      };
+      
+      if (!post.comments) {
+        post.comments = [];
+      }
+      
+      post.comments.push(newComment);
+      
+      return Promise.resolve(newComment);
+    }
+    
+    return Promise.reject(new Error("Пост не найден"));
+  }
+  
+  return fetch(`${postsHost}/${postId}/comments`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text }),
+  })
+    .then(handleApiError)
+    .then((response) => response.json());
+}
+
+// Функция для получения комментариев
+export function getComments({ token, postId }) {
+  // Если это демо-пользователь, возвращаем комментарии из тестовых данных
+  if (isDemoUser(token)) {
+    const post = demoPosts.find(p => p.id === postId);
+    return Promise.resolve(post ? post.comments || [] : []);
+  }
+  
+  return fetch(`${postsHost}/${postId}/comments`, {
+    method: "GET",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then(handleApiError)
+    .then((response) => response.json());
 }
 
 export function registerUser({ login, password, name, imageUrl }) {
@@ -32,12 +355,14 @@ export function registerUser({ login, password, name, imageUrl }) {
       name,
       imageUrl,
     }),
-  }).then((response) => {
-    if (response.status === 400) {
-      throw new Error("Такой пользователь уже существует");
-    }
-    return response.json();
-  });
+  })
+    .then(handleApiError)
+    .then((response) => {
+      if (response.status === 400) {
+        throw new Error("Такой пользователь уже существует");
+      }
+      return response.json();
+    });
 }
 
 export function loginUser({ login, password }) {
@@ -47,12 +372,14 @@ export function loginUser({ login, password }) {
       login,
       password,
     }),
-  }).then((response) => {
-    if (response.status === 400) {
-      throw new Error("Неверный логин или пароль");
-    }
-    return response.json();
-  });
+  })
+    .then(handleApiError)
+    .then((response) => {
+      if (response.status === 400) {
+        throw new Error("Неверный логин или пароль");
+      }
+      return response.json();
+    });
 }
 
 // Загружает картинку в облако, возвращает url загруженной картинки
@@ -63,7 +390,7 @@ export function uploadImage({ file }) {
   return fetch(baseHost + "/api/upload/image", {
     method: "POST",
     body: data,
-  }).then((response) => {
-    return response.json();
-  });
+  })
+    .then(handleApiError)
+    .then((response) => response.json());
 }

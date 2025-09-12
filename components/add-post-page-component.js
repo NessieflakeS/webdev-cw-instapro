@@ -1,23 +1,70 @@
-export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
-  const render = () => {
-    // @TODO: Реализовать страницу добавления поста
+import { uploadImage } from "../api.js";
+import { POSTS_PAGE } from "../routes.js";
+
     const appHtml = `
     <div class="page-container">
-      <div class="header-container"></div>
-      Cтраница добавления поста
-      <button class="button" id="add-button">Добавить</button>
+      <div class="header-container">
+        <div class="page-header">
+          <h1 class="logo" id="go-to-main-page">Instapro</h1>
+          <button class="header-button logout-button">Выйти</button>
+        </div>
+      </div>
+      <div class="form">
+        <h3 class="form-title">Добавить пост</h3>
+        <div class="form-inputs">
+          <div class="upload-image-container"></div>
+          <textarea id="description-input" class="input textarea" rows="4" placeholder="Описание фотографии"></textarea>
+          <button class="button" id="add-button">Добавить</button>
+          <span class="form-error" id="form-error"></span>
+        </div>
+      </div>
     </div>
   `;
 
     appEl.innerHTML = appHtml;
 
-    document.getElementById("add-button").addEventListener("click", () => {
-      onAddPostClick({
-        description: "Описание картинки",
-        imageUrl: "https://image.png",
-      });
-    });
-  };
+    const uploadImageContainer = appEl.querySelector(".upload-image-container");
+    const errorEl = appEl.querySelector("#form-error");
 
-  render();
-}
+    if (uploadImageContainer) {
+      renderUploadImageComponent({
+        element: uploadImageContainer,
+        onImageUrlChange: (newImageUrl) => {
+          imageUrl = newImageUrl;
+        },
+      });
+    }
+
+    // Обработчик для кнопки "Добавить"
+    document.getElementById("add-button").addEventListener("click", () => {
+      const description = document.getElementById("description-input").value.trim();
+      errorEl.textContent = "";
+
+      if (!imageUrl) {
+        errorEl.textContent = "Не выбрана фотография";
+        return;
+      }
+
+      if (!description) {
+        errorEl.textContent = "Добавьте описание фотографии";
+        return;
+      }
+
+      // Показываем состояние загрузки
+      const addButton = document.getElementById("add-button");
+      addButton.disabled = true;
+      addButton.textContent = "Добавляем...";
+
+      onAddPostClick({ description, imageUrl });
+    });
+
+    // Обработчик для перехода на главную
+    document.getElementById("go-to-main-page").addEventListener("click", () => {
+      goToPage(POSTS_PAGE);
+    });
+
+    // Обработчик для выхода
+    document.querySelector(".logout-button").addEventListener("click", () => {
+      logout();
+    });
+
