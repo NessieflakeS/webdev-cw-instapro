@@ -1,6 +1,6 @@
 // Замени на свой, чтобы получить независимый от других набор данных.
 // "боевая" версия инстапро лежит в ключе prod
-const personalKey = "prod";
+const personalKey = "nikandrov_danil";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
 
@@ -101,14 +101,14 @@ const saveDemoLikes = (likes) => {
 };
 
 // Функция для обогащения постов информацией о лайках из localStorage
-const enhancePostsWithDemoLikes = (posts) => {
+const enhancePostsWithDemoLikes = (posts, currentUser) => {
   const demoLikes = getDemoLikes();
   return posts.map(post => {
     const postLikes = demoLikes[post.id] || [];
     return {
       ...post,
       likes: postLikes.map(userId => ({ userId })),
-      isLiked: postLikes.includes(user.id)
+      isLiked: currentUser ? postLikes.includes(currentUser.id) : false
     };
   });
 };
@@ -142,7 +142,7 @@ export function getPosts({ token }) {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
     // Обогащаем посты информацией о лайках
-    const enhancedPosts = enhancePostsWithDemoLikes(demoPosts);
+    const enhancedPosts = enhancePostsWithDemoLikes(demoPosts, user);
     return Promise.resolve(enhancedPosts);
   }
   
@@ -168,7 +168,7 @@ export function getUserPosts({ token, userId }) {
     
     // Фильтруем посты пользователя и обогащаем информацией о лайках
     const userPosts = demoPosts.filter(post => post.user.id === userId);
-    const enhancedPosts = enhancePostsWithDemoLikes(userPosts);
+    const enhancedPosts = enhancePostsWithDemoLikes(userPosts, user);
     return Promise.resolve(enhancedPosts);
   }
   
