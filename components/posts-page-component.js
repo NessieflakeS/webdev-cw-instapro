@@ -1,365 +1,278 @@
-import { likePost, dislikePost, getComments } from "../api.js";
-import { user, goToPage, logout } from "../index.js";
-import { USER_POSTS_PAGE, ADD_POSTS_PAGE, AUTH_PAGE, POSTS_PAGE } from "../routes.js";
-import { formatDate, showSuccess, showError } from "../helpers.js";
+import { goToPage } from "../index.js";
+import { formatDate, showError, showSuccess } from "../helpers.js";
+import { likePost, dislikePost, addComment, getComments } from "../api.js";
+import { user } from "../index.js";
 
-// Глобальные переменные для пагинации
-let isLoadingMore = false;
-let currentPage = 1;
-let hasMorePosts = true;
-let scrollToTopButton = null;
+export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) => {
+  console.log("Активный пользователь: ", user);
+  console.log("Посты для отображения: ", posts);
 
-// Функция для загрузки дополнительных постов
-const loadMorePosts = async () => {
-  if (isLoadingMore || !hasMorePosts) return;
-  
-  isLoadingMore = true;
-  
-  try {
-    // Показываем индикатор загрузки
-    const postsContainer = document.querySelector('.posts');
-    if (!postsContainer) return;
+  // Функция для создания кнопки "Наверх"
+  const setupScrollToTopButton = () => {
+    let scrollToTopButton = null;
+
+    const checkScroll = () => {
+      if (window.scrollY > 300) {
+        if (!scrollToTopButton) {
+          scrollToTopButton = document.createElement('button');
+          scrollToTopButton.innerHTML = '↑ Наверх';
+          scrollToTopButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #565eef;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+          `;
+          scrollToTopButton.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+          document.body.appendChild(scrollToTopButton);
+        }
+      } else if (scrollToTopButton) {
+        document.body.removeChild(scrollToTopButton);
+        scrollToTopButton = null;
+      }
+    };
+
+    window.addEventListener('scroll', checkScroll);
     
-    const loader = document.createElement('div');
-    loader.className = 'posts-loader';
-    loader.innerHTML = '<div class="loader"><div></div><div></div><div></div></div>';
-    postsContainer.appendChild(loader);
+    // Возвращаем функцию очистки
+    return () => {
+      window.removeEventListener('scroll', checkScroll);
+      if (scrollToTopButton && document.body.contains(scrollToTopButton)) {
+        document.body.removeChild(scrollToTopButton);
+      }
+    };
+  };
 
-    // Имитируем загрузку новых постов
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Для демонстрации просто отключаем дальнейшую загрузку
-    hasMorePosts = false;
-    
-    // Показываем сообщение, что посты закончились
-    const noMorePosts = document.createElement('div');
-    noMorePosts.className = 'no-more-posts';
-    noMorePosts.textContent = 'Вы посмотрели все посты';
-    
-    // Удаляем лоадер и добавляем сообщение
-    if (postsContainer.contains(loader)) {
-      postsContainer.removeChild(loader);
-    }
-    postsContainer.appendChild(noMorePosts);
-    
-  } catch (error) {
-    console.error("Ошибка при загрузке постов:", error);
-    showError("Не удалось загрузить дополнительные посты");
-  } finally {
-    isLoadingMore = false;
-  }
-};
-
-// Функция для проверки, достигнут ли низ страницы
-const checkScroll = () => {
-  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-  if (scrollTop + clientHeight >= scrollHeight - 100 && hasMorePosts) {
-    loadMorePosts();
-  }
-  
-  // Показываем/скрываем кнопку "Наверх"
-  toggleScrollButton();
-};
-
-// Показываем/скрываем кнопку "Наверх"
-const toggleScrollButton = () => {
-  if (!scrollToTopButton) return;
-  
-  if (window.pageYOffset > 300) {
-    scrollToTopButton.style.opacity = '1';
-    scrollToTopButton.style.visibility = 'visible';
-  } else {
-    scrollToTopButton.style.opacity = '0';
-    scrollToTopButton.style.visibility = 'hidden';
-  }
-};
-
-// Функция для создания кнопки "Наверх"
-const createScrollToTopButton = () => {
-  if (scrollToTopButton) return;
-  
-  scrollToTopButton = document.createElement('button');
-  scrollToTopButton.className = 'scroll-to-top';
-  scrollToTopButton.innerHTML = '↑';
-  scrollToTopButton.setAttribute('aria-label', 'Наверх');
-  scrollToTopButton.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #565eef;
-    color: white;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  `;
-
-  scrollToTopButton.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  document.body.appendChild(scrollToTopButton);
-};
-
-// Функция для обработки отправки комментария
-const handleCommentSubmit = async (postId, textarea, button) => {
-  const text = textarea.value.trim();
-  
-  if (!text) {
-    showError("Введите текст комментария");
-    return;
-  }
-  
-  try {
-    button.disabled = true;
-    button.textContent = "Отправка...";
-    
-    // В реальном приложении здесь был бы вызов API
-    // await addComment({ token: `Bearer ${user.token}`, postId, text });
-    
-    // Имитируем успешную отправку
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Очищаем поле ввода
-    textarea.value = '';
-    showSuccess("Комментарий добавлен");
-    
-    // В реальном приложении здесь бы обновлялись комментарии
-    // const comments = await getComments({ token: `Bearer ${user.token}`, postId });
-    // updateCommentsUI(postId, comments);
-    
-  } catch (error) {
-    console.error("Ошибка при добавлении комментария:", error);
-    showError("Не удалось добавить комментарий");
-  } finally {
-    button.disabled = false;
-    button.textContent = "Отправить";
-  }
-};
-
-// SVG для иконок лайков
-const likeActiveSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="#FF5252"/></svg>`;
-
-const likeNotActiveSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" stroke="#8A8A8A" stroke-width="2" fill="none"/></svg>`;
-
-  // Сбросим состояние пагинации при первой загрузке
-  if (currentPage === 1) {
-    isLoadingMore = false;
-    hasMorePosts = true;
-  }
-  
-  const postsHtml = posts.map((post) => {
-    const isLiked = user && post.likes && post.likes.some((like) => like.userId === user._id);
-    
-    // Формируем HTML для комментариев
-    const commentsHtml = post.comments && post.comments.length > 0 
-      ? post.comments.slice(0, 3).map(comment => `
-          <div class="comment">
-            <strong>${comment.user.name}:</strong> ${comment.text}
-            <span class="comment-date">${formatDate(comment.createdAt)}</span>
-          </div>
-        `).join('')
-      : '<div class="no-comments">Пока нет комментариев</div>';
-    
-    return `
-      <li class="post">
-        <div class="post-header" data-user-id="${post.user.id}">
-          <img src="${post.user.imageUrl}" class="post-header__user-image" alt="Аватар ${post.user.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFOEU4RTgiLz4KPHBhdGggZD0iTTI2IDI2QzI2IDI0LjM0MzEgMjQuNjU2OSAyMyAyMyAyM0gxN0MxNS4zNDMxIDIzIDE0IDI0LjM0MzEgMTQgMjZWMjcuNUMxNCAyOC4wNTIyIDE0LjQ0NzcgMjguNSAxNSAyOC41SDI1QzI1LjU1MjMgMjguNSAyNiAyOC4wNTIyIDI2IDI3LjVWMjZaIiBmaWxsPSIjOEE4QThBIi8+CjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjIiIGZpbGw9IiM4QThBOEEiLz4KPGNpcmNsZSBjeD0iMjQiIGN5PSIxNiIgcj0iMiIgZmlsbD0iIzhBOEE4QSIvPgo8L3N2Zz4K'">
-          <p class="post-header__user-name">${post.user.name}</p>
-        </div>
-        <div class="post-image-container">
-          <img class="post-image" src="${post.imageUrl}" loading="lazy" alt="Пост пользователя ${post.user.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDgwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjRThFOEU4Ii8+CjxwYXRoIGQ9Ik0zNTAgMzAwQzM1MCAyNjEuMDQ4IDM4MS4wNDggMjMwIDQyMCAyMzBDNDU4Ljk1MiAyMzAgNDkwIDI2MS4wNDggNDkwIDMwMEM0OTAgMzM4Ljk1MiA0NTguOTUyIDM3MCA0MjAgMzcwQzM4MS4wNDggMzcwIDM1MCAzMzguOTUyIDM1MCAzMDBaIiBmaWxsPSIjOEE4QThBIi8+CjxwYXRoIGQ9Ik0yNTAgNDUwQzI1MCA0MjcuOTA5IDI2Ny45MDkgNDEwIDI5MCA0MTBINTUwQzU3Mi4wOTEgNDEwIDU5MCA0MjcuOTA5IDU5MCA0NTBWNTUwQzU5MCA1NzIuMDkxIDU3Mi4wOTEgNTkwIDU1MCA1OTBIMjkwQzI2Ny45MDkgNTkwIDI1MCA1NzIuMDkxIDI1MCA1NTBWNDUwWiIgZmlsbD0iIzhBOEE4QSIvPgo8L3N2Zz4K'">
-        </div>
-        <div class="post-likes">
-          <button data-post-id="${post.id}" class="like-button">
-            ${isLiked ? likeActiveSvg : likeNotActiveSvg}
-          </button>
-          <p class="post-likes-text">
-            Нравится: <strong>${post.likes ? post.likes.length : 0}</strong>
-          </p>
-        </div>
-        <p class="post-text">
-          <span class="user-name">${post.user.name}</span>
-          ${post.description}
-        </p>
-        
-        <!-- Секция комментариев -->
-        <div class="post-comments">
-          <div class="comments-list" id="comments-${post.id}">
-            ${commentsHtml}
-          </div>
-          
-          ${user ? `
-            <div class="add-comment">
-              <textarea class="comment-input" placeholder="Добавить комментарий..." rows="1"></textarea>
-              <button class="button comment-button" data-post-id="${post.id}">Отправить</button>
-            </div>
-          ` : ''}
-        </div>
-        
-        <p class="post-date">
-          ${formatDate(post.createdAt)}
-        </p>
-      </li>
-    `;
-  }).join('');
-
-  const pageTitle = isUserPage && posts.length > 0
-    ? `<div class="posts-user-header">
-         <img src="${posts[0].user.imageUrl}" class="posts-user-header__user-image" alt="Аватар ${posts[0].user.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFOEU4RTgiLz4KPHBhdGggZD0iTTI2IDI2QzI2IDI0LjM0MzEgMjQuNjU2OSAyMyAyMyAyM0gxN0MxNS4zNDMxIDIzIDE0IDI0LjM0MzEgMTQgMjZWMjcuNUMxNCAyOC4wNTIyIDE0LjQ0NzcgMjguNSAxNSAyOC41SDI1QzI1LjU1MjMgMjguNSAyNiAyOC4wNTIyIDI2IDI3LjVWMjZaIiBmaWxsPSIjOEE4QThBIi8+CjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjIiIGZpbGw9IiM4QThBOEEiLz4KPGNpcmNsZSBjeD0iMjQiIGN5PSIxNiIgcj0iMiIgZmlsbD0iIzhBOEE4QSIvPgo8L3N2Zz4K'">
-         <p class="posts-user-header__user-name">${posts[0].user.name}</p>
-       </div>`
-    : '';
-
-  const appHtml = `
+  // HTML для страницы с постами
+  const postsHtml = `
     <div class="page-container">
       <div class="header-container">
-        <div class="page-header">
-          <h1 class="logo" id="go-to-main-page">Instapro</h1>
-          ${user ? `
-            <button class="header-button add-post-button">Добавить пост</button>
-            <button class="header-button logout-button">Выйти</button>
-          ` : `
-            <button class="header-button login-button">Войти</button>
-          `}
-        </div>
+        ${isUserPage ? `
+          <div class="posts-user-header">
+            <img class="posts-user-header__user-image" src="${posts[0]?.user.imageUrl || './assets/images/user-placeholder.png'}" onerror="window.handleImageError(this)" />
+            <p class="posts-user-header__user-name">${posts[0]?.user.name || 'Пользователь'}</p>
+          </div>
+        ` : `
+          <div class="page-header">
+            <h1 class="logo">Instapro</h1>
+            <div>
+              ${user ? `
+                <button class="header-button add-post-button" id="add-post-button">Добавить пост</button>
+                <button class="header-button logout-button" id="logout-button">Выйти</button>
+              ` : `
+                <button class="header-button" id="login-button">Войти</button>
+                <button class="header-button" id="register-button">Зарегистрироваться</button>
+              `}
+            </div>
+          </div>
+        `}
       </div>
-      ${pageTitle}
       <ul class="posts">
-        ${posts.length > 0 ? postsHtml : '<p class="no-posts">Пока нет постов</p>'}
+        ${posts.length > 0 ? posts.map(post => `
+          <li class="post">
+            <div class="post-header" data-user-id="${post.user.id}">
+              <img src="${post.user.imageUrl}" class="post-header__user-image" onerror="window.handleImageError(this)">
+              <p class="post-header__user-name">${post.user.name}</p>
+            </div>
+            <div class="post-image-container">
+              <img class="post-image" src="${post.imageUrl}" onerror="this.src='./assets/images/image-placeholder.png'; this.onerror=null;">
+            </div>
+            <div class="post-likes">
+              <button class="like-button" data-post-id="${post.id}" data-is-liked="${post.isLiked}">
+                <img src="${post.isLiked ? './assets/images/like-active.svg' : './assets/images/like-not-active.svg'}" alt="${post.likes.length}">
+              </button>
+              <p class="post-likes-text">
+                Нравится: <strong>${post.likes.length}</strong>
+              </p>
+            </div>
+            <p class="post-text">
+              <span class="user-name">${post.user.name}</span>
+              ${post.description}
+            </p>
+            <p class="post-date">${formatDate(post.createdAt)}</p>
+            <div class="post-comments">
+              ${post.comments && post.comments.length > 0 ? `
+                <h4>Комментарии (${post.comments.length}):</h4>
+                ${post.comments.map(comment => `
+                  <div class="comment">
+                    <strong>${comment.user.name}:</strong> ${comment.text}
+                    <span class="post-date">${formatDate(comment.createdAt)}</span>
+                  </div>
+                `).join('')}
+              ` : ''}
+              ${user ? `
+                <div class="add-comment">
+                  <textarea class="comment-input" data-post-id="${post.id}" placeholder="Добавить комментарий..."></textarea>
+                  <button class="button comment-button" data-post-id="${post.id}">Отправить</button>
+                </div>
+              ` : ''}
+            </div>
+          </li>
+        `).join('') : `
+          <div class="no-posts">
+            <p>Пока нет ни одной публикации</p>
+          </div>
+        `}
       </ul>
     </div>
   `;
 
-  appEl.innerHTML = appHtml;
+  appEl.innerHTML = postsHtml;
 
-  // Обработчик для перехода на главную страницу
-  const goToMainPageEl = document.getElementById("go-to-main-page");
-  if (goToMainPageEl) {
-    goToMainPageEl.addEventListener("click", () => {
-      goToPage(POSTS_PAGE);
-    });
-  }
-
-  // Обработчики для кнопок в шапке
-  if (user) {
-    const addPostButton = document.querySelector(".add-post-button");
-    if (addPostButton) {
-      addPostButton.addEventListener("click", () => {
-        goToPage(ADD_POSTS_PAGE);
+  // Настраиваем обработчики событий
+  const setupEventListeners = () => {
+    // Обработчик для логотипа
+    const logoElement = document.querySelector('.logo');
+    if (logoElement) {
+      logoElement.addEventListener('click', () => {
+        goToPage('posts');
       });
     }
 
-    const logoutButton = document.querySelector(".logout-button");
-    if (logoutButton) {
-      logoutButton.addEventListener("click", () => {
-        logout();
+    // Обработчики для кнопок авторизации
+    if (document.getElementById('login-button')) {
+      document.getElementById('login-button').addEventListener('click', () => {
+        goToPage('auth');
       });
     }
-  } else {
-    const loginButton = document.querySelector(".login-button");
-    if (loginButton) {
-      loginButton.addEventListener("click", () => {
-        goToPage(AUTH_PAGE);
+
+    if (document.getElementById('register-button')) {
+      document.getElementById('register-button').addEventListener('click', () => {
+        goToPage('auth');
       });
     }
-  }
 
-  // Обработчики для переходов на страницу пользователя
-  document.querySelectorAll(".post-header").forEach((header) => {
-    header.addEventListener("click", () => {
-      goToPage(USER_POSTS_PAGE, {
-        userId: header.dataset.userId,
+    // Обработчик для кнопки выхода
+    if (document.getElementById('logout-button')) {
+      document.getElementById('logout-button').addEventListener('click', () => {
+        // Функция logout должна быть импортирована из index.js
+        if (window.logout) {
+          window.logout();
+        }
       });
-    });
-  });
-
-  // Обработчики для лайков
-  document.querySelectorAll(".like-button").forEach((button) => {
-  button.addEventListener("click", () => {
-    if (!user) {
-      showError("Для лайков необходимо авторизоваться");
-      goToPage(AUTH_PAGE);
-      return;
     }
 
-      const postId = button.dataset.postId;
-      const post = posts.find(p => p.id === postId);
-      const isLiked = post.likes.some((like) => like.userId === user._id);
-      
-      // Показываем состояние загрузки
-      button.disabled = true;
-      
-      if (isLiked) {
-        dislikePost({ token: `Bearer ${user.token}`, postId })
-          .then(() => {
-            // Обновляем состояние лайка
-            post.likes = post.likes.filter(like => like.userId !== user._id);
-            renderPostsPageComponent({ appEl, posts, isUserPage });
-          })
-          .catch((error) => {
-            console.error(error);
-            showError("Ошибка при снятии лайка");
-            button.disabled = false;
-          });
-      } else {
-        likePost({ token: `Bearer ${user.token}`, postId })
-          .then(() => {
-            // Обновляем состояние лайка
-            post.likes.push({ userId: user._id });
-            renderPostsPageComponent({ appEl, posts, isUserPage });
-          })
-          .catch((error) => {
-            console.error(error);
-            showError("Ошибка при установке лайка");
-            button.disabled = false;
-          });
-      }
-    });
-  });
+    // Обработчик для кнопки добавления поста
+    if (document.getElementById('add-post-button')) {
+      document.getElementById('add-post-button').addEventListener('click', () => {
+        goToPage('add-post');
+      });
+    }
 
-  // Обработчики для комментариев
-  document.querySelectorAll('.comment-button').forEach(button => {
-    button.addEventListener('click', () => {
-      const postId = button.dataset.postId;
-      const textarea = button.previousElementSibling;
-      handleCommentSubmit(postId, textarea, button);
-    });
-  });
+    // Обработчики для лайков
+    document.querySelectorAll('.like-button').forEach(button => {
+      button.addEventListener('click', () => {
+        if (!user) {
+          showError('Чтобы поставить лайк, необходимо авторизоваться');
+          return;
+        }
 
-  // Обработчик Enter для отправки комментариев
-  document.querySelectorAll('.comment-input').forEach(textarea => {
-    textarea.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        const button = textarea.nextElementSibling;
         const postId = button.dataset.postId;
-        handleCommentSubmit(postId, textarea, button);
-      }
-    });
-  });
+        const isLiked = button.dataset.isLiked === 'true';
 
-  // Создаем кнопку "Наверх"
-  createScrollToTopButton();
-  
-  // Добавляем обработчик скролла
-  window.addEventListener('scroll', checkScroll);
-  
-  // Проверяем начальное состояние кнопки "Наверх"
-  toggleScrollButton();
-  
+        if (isLiked) {
+          // Убираем лайк
+          dislikePost({ token: `Bearer ${user.token}`, postId })
+            .then(() => {
+              const likesText = button.querySelector('img').alt;
+              const likesCount = parseInt(likesText) - 1;
+              button.querySelector('img').alt = likesCount;
+              button.querySelector('img').src = './assets/images/like-not-active.svg';
+              button.dataset.isLiked = 'false';
+              button.closest('.post-likes').querySelector('.post-likes-text').innerHTML = 
+                `Нравится: <strong>${likesCount}</strong>`;
+            })
+            .catch(error => {
+              showError(error.message);
+            });
+        } else {
+          // Ставим лайк
+          likePost({ token: `Bearer ${user.token}`, postId })
+            .then(() => {
+              const likesText = button.querySelector('img').alt;
+              const likesCount = parseInt(likesText) + 1;
+              button.querySelector('img').alt = likesCount;
+              button.querySelector('img').src = './assets/images/like-active.svg';
+              button.dataset.isLiked = 'true';
+              button.closest('.post-likes').querySelector('.post-likes-text').innerHTML = 
+                `Нравится: <strong>${likesCount}</strong>`;
+            })
+            .catch(error => {
+              showError(error.message);
+            });
+        }
+      });
+    });
+
+    // Обработчики для комментариев
+    document.querySelectorAll('.comment-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const postId = button.dataset.postId;
+        const textarea = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
+        const commentText = textarea.value.trim();
+
+        if (!commentText) {
+          showError('Комментарий не может быть пустым');
+          return;
+        }
+
+        addComment({ token: `Bearer ${user.token}`, postId, text: commentText })
+          .then(newComment => {
+            showSuccess('Комментарий добавлен');
+            textarea.value = '';
+
+            // Обновляем список комментариев
+            const commentsContainer = button.closest('.post-comments');
+            const commentElement = document.createElement('div');
+            commentElement.className = 'comment';
+            commentElement.innerHTML = `
+              <strong>${newComment.user.name}:</strong> ${newComment.text}
+              <span class="post-date">${formatDate(newComment.createdAt)}</span>
+            `;
+            
+            const commentsHeader = commentsContainer.querySelector('h4');
+            if (commentsHeader) {
+              const countMatch = commentsHeader.textContent.match(/\((\d+)\)/);
+              if (countMatch) {
+                const newCount = parseInt(countMatch[1]) + 1;
+                commentsHeader.textContent = `Комментарии (${newCount}):`;
+              }
+              commentsHeader.after(commentElement);
+            } else {
+              const newHeader = document.createElement('h4');
+              newHeader.textContent = `Комментарии (1):`;
+              commentsContainer.prepend(newHeader);
+              newHeader.after(commentElement);
+            }
+          })
+          .catch(error => {
+            showError(error.message);
+          });
+      });
+    });
+
+    // Обработчики для переходов на страницу пользователя
+    document.querySelectorAll('.post-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const userId = header.dataset.userId;
+        goToPage('user-posts', { userId });
+      });
+    });
+  };
+
+  // Настраиваем кнопку "Наверх" и сохраняем функцию очистки
+  const cleanupScroll = setupScrollToTopButton();
+  setupEventListeners();
+
   // Возвращаем функцию очистки для удаления обработчиков при размонтировании
   return () => {
-    window.removeEventListener('scroll', checkScroll);
-    if (scrollToTopButton && document.body.contains(scrollToTopButton)) {
-      document.body.removeChild(scrollToTopButton);
-      scrollToTopButton = null;
-    }
+    if (cleanupScroll) cleanupScroll();
   };
+};
