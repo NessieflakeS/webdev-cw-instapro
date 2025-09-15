@@ -1,6 +1,6 @@
 import { goToPage } from "../index.js";
 import { formatDate, showError, showSuccess } from "../helpers.js";
-import { likePost, dislikePost, addComment, getComments } from "../api.js";
+import { likePost, dislikePost, addComment } from "../api.js";
 import { user } from "../index.js";
 
 export const renderPostsPageComponent = ({ appEl, posts, isUserPage = false }) => {

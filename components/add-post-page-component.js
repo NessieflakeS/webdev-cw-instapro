@@ -1,7 +1,5 @@
 import { uploadImage } from "../api.js";
 import { renderHeaderComponent } from "./header-component.js";
-import { goToPage } from "../index.js";
-import { POSTS_PAGE } from "../routes.js";
 import { showError, showSuccess } from "../helpers.js";
 
 export const renderAddPostPageComponent = ({ appEl, onAddPostClick }) => {

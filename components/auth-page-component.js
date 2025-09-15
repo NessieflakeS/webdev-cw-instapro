@@ -1,8 +1,8 @@
 import { loginUser, registerUser, uploadImage } from "../api.js";
-import { showError, showSuccess, showInfo } from "../helpers.js";
+import { showError, showSuccess } from "../helpers.js";
 import { demoUsers, loginDemoUser } from "../demo-users.js";
 
-export const renderAuthPageComponent = ({ appEl, setUser, user, goToPage }) => {
+export const renderAuthPageComponent = ({ appEl, setUser, user }) => {
   let isLogin = true;
 
   const render = () => {
