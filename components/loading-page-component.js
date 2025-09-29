@@ -1,37 +1,65 @@
-import { renderHeaderComponent } from "./header-component.js";
-
-/**
- * Компонент страницы загрузки.
- * Этот компонент отображает страницу с индикатором загрузки и заголовком.
- * Используется для отображения промежуточного состояния, пока выполняется загрузка данных или другой процесс.
- * 
- * @param {HTMLElement} params.appEl - Корневой элемент приложения, в который будет рендериться страница загрузки.
- * @param {Object} params.user - Объект пользователя, содержащий данные о текущем авторизованном пользователе (если он есть).
- * @param {Function} params.goToPage - Функция для навигации по страницам.
- */
-export function renderLoadingPageComponent({ appEl, user, goToPage }) {
-  /**
-   * HTML-разметка страницы загрузки.
-   * Содержит контейнер заголовка и индикатор загрузки.
-   */
+export const renderLoadingPageComponent = ({ appEl, user, goToPage }) => {
   const appHtml = `
-              <div class="page-container">
-                <div class="header-container"></div>
-                <div class="loading-page">
-                  <div class="loader"><div></div><div></div><div></div></div>
-                </div>
-              </div>`;
+    <div class="page-container">
+      <div class="header-container">
+        <div class="page-header">
+          <h1 class="logo">Instapro</h1>
+          <div>
+            ${user ? `
+              <button class="header-button add-post-button" id="add-post-button">Добавить пост</button>
+              <button class="header-button logout-button" id="logout-button">Выйти</button>
+            ` : `
+              <button class="header-button" id="login-button">Войти</button>
+              <button class="header-button" id="register-button">Зарегистрироваться</button>
+            `}
+          </div>
+        </div>
+      </div>
+      <div class="loading-page">
+        <div class="loader">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+        <p class="loading-text">Загрузка...</p>
+      </div>
+    </div>
+  `;
 
-  // Устанавливаем разметку в корневой элемент приложения
   appEl.innerHTML = appHtml;
 
-  /**
-   * Рендеринг заголовка с использованием компонента `renderHeaderComponent`.
-   * Передаются данные пользователя и функция навигации.
-   */
-  renderHeaderComponent({
-    user,
-    element: document.querySelector(".header-container"),
-    goToPage,
-  });
-}
+  // Настраиваем обработчики событий для заголовка
+  const logoElement = document.querySelector('.logo');
+  if (logoElement) {
+    logoElement.addEventListener('click', () => {
+      goToPage('posts');
+    });
+  }
+
+  if (document.getElementById('add-post-button')) {
+    document.getElementById('add-post-button').addEventListener('click', () => {
+      goToPage('add-post');
+    });
+  }
+
+  if (document.getElementById('logout-button')) {
+    document.getElementById('logout-button').addEventListener('click', () => {
+      // Функция logout должна быть импортирована из index.js
+      if (window.logout) {
+        window.logout();
+      }
+    });
+  }
+
+  if (document.getElementById('login-button')) {
+    document.getElementById('login-button').addEventListener('click', () => {
+      goToPage('auth');
+    });
+  }
+
+  if (document.getElementById('register-button')) {
+    document.getElementById('register-button').addEventListener('click', () => {
+      goToPage('auth');
+    });
+  }
+};

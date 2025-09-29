@@ -7,6 +7,20 @@
 
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./ui-kit.css" />
+    
+    <script>
+      // Функция для обработки ошибок загрузки изображений
+      window.handleImageError = function(img) {
+        // Заменяем сломанное изображение на заглушку
+        if (img.src.includes('pravatar.cc') || img.src.includes('unsplash.com')) {
+          img.src = './assets/images/user-placeholder.png';
+        } else if (img.src.includes('like-active.svg') || img.src.includes('like-not-active.svg')) {
+          // Для иконок лайков используем текстовую замену
+          img.style.display = 'none';
+          img.parentNode.innerHTML = img.alt;
+        }
+      };
+    </script>
   </head>
 
   <body>

@@ -1,63 +1,52 @@
-import { goToPage, logout, user } from "../index.js";
-import { ADD_POSTS_PAGE, AUTH_PAGE, POSTS_PAGE } from "../routes.js";
+import { user } from "../index.js";
+import { goToPage } from "../index.js";
+import { logout } from "../index.js";
 
-/**
- * Компонент заголовка страницы.
- * Этот компонент отображает шапку страницы с логотипом, кнопкой добавления постов/входа и кнопкой выхода (если пользователь авторизован).
- * 
- * @param {HTMLElement} params.element - HTML-элемент, в который будет рендериться заголовок.
- * @returns {HTMLElement} Возвращает элемент заголовка после рендеринга.
- */
-export function renderHeaderComponent({ element }) {
-  /**
-   * Рендерит содержимое заголовка.
-   */
+export const renderHeaderComponent = ({ element }) => {
   element.innerHTML = `
-  <div class="page-header">
-      <h1 class="logo">instapro</h1>
-      <button class="header-button add-or-login-button">
-      ${
-        user
-          ? `<div title="Добавить пост" class="add-post-sign"></div>`
-          : "Войти"
-      }
-      </button>
-      ${
-        user
-          ? `<button title="${user.name}" class="header-button logout-button">Выйти</button>`
-          : ""
-      }  
-  </div>
+    <div class="page-header">
+      <h1 class="logo">Instapro</h1>
+      <div>
+        ${user ? `
+          <button class="header-button add-post-button" id="add-post-button">Добавить пост</button>
+          <button class="header-button logout-button" id="logout-button">Выйти</button>
+        ` : `
+          <button class="header-button" id="login-button">Войти</button>
+          <button class="header-button" id="register-button">Зарегистрироваться</button>
+        `}
+      </div>
+    </div>
   `;
 
-  /**
-   * Обработчик клика по кнопке "Добавить пост"/"Войти".
-   * Если пользователь авторизован, перенаправляет на страницу добавления постов.
-   * Если пользователь не авторизован, перенаправляет на страницу авторизации.
-   */
-  element
-    .querySelector(".add-or-login-button")
-    .addEventListener("click", () => {
-      if (user) {
-        goToPage(ADD_POSTS_PAGE);
-      } else {
-        goToPage(AUTH_PAGE);
-      }
+  // Обработчики событий для заголовка
+  const logoElement = element.querySelector('.logo');
+  if (logoElement) {
+    logoElement.addEventListener('click', () => {
+      goToPage('posts');
     });
+  }
 
-  /**
-   * Обработчик клика по логотипу.
-   * Перенаправляет на страницу с постами.
-   */
-  element.querySelector(".logo").addEventListener("click", () => {
-    goToPage(POSTS_PAGE);
-  });
+  if (element.querySelector('#add-post-button')) {
+    element.querySelector('#add-post-button').addEventListener('click', () => {
+      goToPage('add-post');
+    });
+  }
 
-  /**
-   * Обработчик клика по кнопке "Выйти".
-   * Если кнопка существует (т.е. пользователь авторизован), вызывает функцию `logout`.
-   */
-  element.querySelector(".logout-button")?.addEventListener("click", logout);
+  if (element.querySelector('#logout-button')) {
+    element.querySelector('#logout-button').addEventListener('click', () => {
+      logout();
+    });
+  }
 
-  return element;
-}
+  if (element.querySelector('#login-button')) {
+    element.querySelector('#login-button').addEventListener('click', () => {
+      goToPage('auth');
+    });
+  }
+
+  if (element.querySelector('#register-button')) {
+    element.querySelector('#register-button').addEventListener('click', () => {
+      goToPage('auth');
+    });
+  }
+};
